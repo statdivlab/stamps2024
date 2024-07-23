@@ -294,7 +294,7 @@ test_all <- emuFit(formula = ~ Group,
 However, we ran these robust score tests and saved the coefficient table for you, which we can load in here. 
 
 ```{r}
-radEmu_coef <- read.csv("radEmu_coef.csv")
+radEmu_coef <- read.csv("https://raw.githubusercontent.com/statdivlab/stamps2024/main/stats-labs/differential-abundance/radEmu_coef.csv")
 radEmu_pvals <- radEmu_coef$pval
 ```
 
