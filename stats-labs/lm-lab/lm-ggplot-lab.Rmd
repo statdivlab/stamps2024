@@ -1,6 +1,6 @@
 ---
 title: "lm-ggplot-lab"
-author: "Sarah Teichman"
+author: "Amy Willis, Sarah Teichman and Maria Valdez"
 date: "2024-07-23"
 output: html_document
 ---
