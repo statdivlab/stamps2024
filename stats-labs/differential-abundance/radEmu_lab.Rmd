@@ -495,24 +495,46 @@ pval_df %>% dplyr::select(contains("pval")) %>%
 
 We see much lower correlation between p-values. This makes sense, because each method has different testing procedures.
 
-Finally, we can check out which mOTUs each method highlight as being the most significant
+Finally, we can compute q-values (to control the false discovery rate across the $46$ tests we ran) and see which mOTUs each method finds to be significant. We'll use the `qvalue` package for this. 
 
-```{r}
-pval_df %>%
-  mutate(radEmu = rank(radEmu_pvals),
-         ALDEx2 = rank(aldex_pvals),
-         ANCOMBC2 = rank(ancom_pvals),
-         DESeq2 = rank(deseq_pvals)) %>%
-  filter(radEmu < 6 | ALDEx2 < 6 | ANCOMBC2 < 6 | DESeq2 < 6) %>%
-  dplyr::select(-contains("pval")) %>%
-  pivot_longer(cols = 2:5, names_to = "method", values_to = "rank") %>%
-  mutate(rank = ifelse(rank > 5, NA, rank)) %>%
-  ggplot(aes(y = mOTU, x = method, fill = rank)) + 
-  geom_tile() + 
-  labs(x = "Method", fill = "Rank")
+```{r, include = FALSE}
+if (!("qvalue" %in% row.names(installed.packages()))) {
+  BiocManager::install("qvalue")
+}
+library(qvalue)
+# More information can be found in vignettes and in the papers cited here:
+citation("qvalue")
 ```
 
-From this plot we can see that there are $14$ mOTUs that have one of the top five smallest p-values for one or more method. Out of these, $10$ are only in the top five for one method, $2$ are in the top five for two methods, and $2$ are in the top five for three methods. If we were using these differential abundance methods for hypothesis generation, to find the mOTUs with the most evidence against the null hypotheses of no differential abundance, we would find some overlapping mOTUs across methods. 
+```{r}
+qval_df <- pval_df %>%
+  mutate(radEmu_q = qvalue::qvalue(radEmu_pvals)$qvalues,
+         # we add pi0 = 1 because aldex and deseq p-values don't range from 0-1 as 'qvalue'
+         # expects, they instead range from 0 to ~0.85
+         aldex_q = qvalue::qvalue(aldex_pvals, pi0 = 1)$qvalues,
+         ancom_q = qvalue::qvalue(ancom_pvals)$qvalues,
+         deseq_q = qvalue::qvalue(deseq_pvals, pi0 = 1)$qvalues) %>% 
+  dplyr::select(-contains("pvals")) %>%
+  pivot_longer(cols = 2:5, names_to = "method", values_to = "qval") 
+qval_df %>%
+  group_by(method) %>%
+  summarise(sum(qval <= 0.10))
+```
+
+Here we can see that there are no mOTUs that are significant using qvalues and a false discovery rate of 0.10 using `radEmu` and `ALDEx2`, and there are $16$ and $25$ mOTUs that are significant using `ANCOM-BC2` and `DESeq2` respectively. This demonstrates a trade-off between these methods, `radEmu` and `ALDEx2` better control Type I error but often have lower power, while `ANCOM-BC2` and `DESeq2` fail to control Type I error in some settings but often have higher power. 
+
+Finally, we will check how many of the significant mOTUs that were found by `ANCOM-BC2` and `DESeq2` are the same. 
+
+```{r}
+qval_df %>%
+  filter(qval <= 0.10) %>%
+  group_by(mOTU) %>%
+  summarise(num_small_q = n()) %>%
+  group_by(num_small_q) %>%
+  summarise(n())
+```
+
+Here we can see that there are $23$ mOTUs that are only identified by one method and $9$ mOTUs that are identified by both methods. 
 
 ## Conclusions 
 
