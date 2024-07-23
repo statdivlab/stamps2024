@@ -534,7 +534,7 @@ data.frame(radEmu_est, aldex_est, ancom_est, deseq_est) %>%
   cor(use = "complete.obs")
 ```
 
-What do you note about the relationship between estimates? 
+What do you note about the relationship between estimates? Does this surprise you? Why or why not?
 
 Next, we can compare the p-values. 
 
