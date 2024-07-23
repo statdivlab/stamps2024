@@ -194,12 +194,7 @@ ch_fit_ref <- emuFit(formula = ~ Group,
                      Y = small_Y,
                      run_score_tests = FALSE,
                      # set our "constraint" i.e. choose our reference mOTU
-                     constraint_fn = function(x) {x[ref_num]},
-                     constraint_grad_fn = function(x) {
-                       grad <- rep(0, length(x))
-                       grad[ref_num] <- 1
-                       return(grad) },
-                     constraint_param = NA)
+                     constraint_fn = ref_num)
 ch_fit_ref$coef[1, ]
 ```
 
@@ -219,7 +214,13 @@ data.frame(typical_est = ch_fit$coef$estimate,
        y = "Estimate compared to reference mOTU")
 ```
 
-The $x = y$ line is shown in red. What do you notice about the relationship between the estimates from the first run of `radEmu` and the estimates from the second run of `radEmu`?
+The $x = y$ line is shown in red. What do you notice about the relationship between the estimates from the first run of `radEmu` and the estimates from the second run of `radEmu`? 
+
+What is the numerical difference between the estimate of any mOTU in `ch_fit` and the estimate of the same mOTU in `ch_fit_ref`?
+
+```{r}
+
+```
 
 Let's switch back to the model that we fit first, in which we compare each log fold difference to the typical log fold difference across all mOTUs, and look closer at our results. 
 

@@ -172,12 +172,7 @@ ch_fit_ref <- emuFit(formula = ~ Group,
                      Y = small_Y,
                      run_score_tests = FALSE,
                      # set our "constraint" i.e. choose our reference mOTU
-                     constraint_fn = function(x) {x[ref_num]},
-                     constraint_grad_fn = function(x) {
-                       grad <- rep(0, length(x))
-                       grad[ref_num] <- 1
-                       return(grad) },
-                     constraint_param = NA)
+                     constraint_fn = ref_num)
 ch_fit_ref$coef[1, ]
 ```
 
