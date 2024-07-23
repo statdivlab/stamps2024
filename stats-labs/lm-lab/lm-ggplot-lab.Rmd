@@ -28,8 +28,8 @@ Next, let's load our data. We'll start with two data sets. This data comes from 
 https://journals.asm.org/doi/full/10.1128/mSystems.00296-20?rfr_dat=cr_pub++0pubmed&url_ver=Z39.88-2003&rfr_id=ori%3Arid%3Acrossref.org&
 
 ```{r}
-ddpcr <- read_csv("https://raw.githubusercontent.com/statdivlab/stamps2023/main/labs/lm-lab/data/ddPCR.csv")
-meta <- read_csv("https://raw.githubusercontent.com/statdivlab/stamps2023/main/labs/lm-lab/data/meta_data.csv")
+ddpcr <- read_csv("https://raw.githubusercontent.com/statdivlab/stamps2024/main/stats-labs/lm-lab/data/ddPCR.csv")
+meta <- read_csv("https://raw.githubusercontent.com/statdivlab/stamps2024/main/stats-labs/lm-lab/data/meta_data.csv")
 ```
 
 ## Preparing the data
