@@ -245,13 +245,13 @@ plot(dv_water_st$simpson,
 testDiversity(dv_water_st, "simpson")
 ```
 
-To test hypotheses about beta diversity using `DivNet`, let's pull out our estimated distance matrix:
+We can also use `DivNet` on beta diversities! Let's pull out our estimated Bray-Curtis dissimilarity matrix. 
 
 ```{r}
 bc <- dv_water_st$`bray-curtis`
 ```
 
-You'll notice that all samples with the same SampleType at the same estimate. `DivNet` uses covariate information to share strength across samples and obtain an estimate about the beta diversity of the **ecosystems** which can be defined as individual samples, groups of samples, etc...
+You'll notice that all samples with the same `SampleType` at the same estimate. `DivNet` uses covariate information to share strength across samples and obtain an estimate about the beta diversity of the **ecosystems** which can be defined as individual samples, groups of samples, etc...
 
 We can consider the  unique rows using:
 
