@@ -194,7 +194,7 @@ Our estimate of 1,006,955 for the coefficient for `Sample Type`Sputum tells us t
 
 We have a p-value of 0.01355. If we use a alpha level of 0.05, we reject the null hypothesis that there is no difference in the true mean concentration in Sputum and Saliva samples. 
 
-Now, let's fit a model with multiple covariates. Let's consider Treatment and Sample Type. Wrtie the proper model below, using `+` to connect covariates
+Now, let's fit a model with multiple covariates. Let's consider `Treatment Group` and `Sample Type`. Write the proper model below, using `+` to connect covariates
 
 ```{r}
 mod_treat_type <- lm(ddpcr ~ , data = both)
