@@ -231,9 +231,8 @@ How do we interpret these coefficients?
 Since in this model we are using a log link function, our coefficients describe how the log(expected counts) differs between saliva samples and sputum samples. A p-value lower than 2e-16 (at an alpha level of 0.05) indicates we have enough evidence to reject there is no difference between these log(expected counts). And by exponentiating  the estimated coefficient (exp(7.336e-01) = 2.082564), we can say that the estimated expected counts observed for samples of Sputum is 2.08 times higher than the estimated expected counts for samples of saliva.
 
 Now create your own model, by selecting:
-1. Two covariates that you think could potentially be associated to the mean ddpcr in some scale. 
-2. Whether if you are interested in exploring these associations in the linear scale or employ a generalized linear model. Feel free to explore the options given in `glm`, but remember to give a proper interpretation to your estimated coefficients. 
-
+1. Two covariates that you think could potentially be associated to the ddpcr counts in some scale. 
+2. How are you interested in exploring these associations? 
 Include your fitted model here: 
 
 ```{r}
