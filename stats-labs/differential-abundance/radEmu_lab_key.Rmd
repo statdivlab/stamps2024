@@ -38,12 +38,8 @@ We can start by loading the metadata table.
 
 ```{r}
 data("wirbel_sample")
-```
-
-Use `dim()` and `head()` to check out the size and contents of this metadata table. 
-
-```{r}
-
+dim(wirbel_sample)
+head(wirbel_sample)
 ```
 
 Let's see how many observations we have among cases ("CRC") and controls ("CTR")
@@ -54,27 +50,24 @@ wirbel_sample %>%
   summarize(n = length(Group))
 ```
 
-We have data from studies in five different countries. How much from each study, you ask? You can find out using the same syntax as in the previous code chunk.
+We have data from studies in five different countries. How much from each study, you ask? Let's find out!
 
 ```{r}
-
+wirbel_sample %>%
+  group_by(Country) %>%
+  summarise(count = n())
 ```
 
 Now let's load the mOTU table.
 
 ```{r}
 data("wirbel_otu")
+dim(wirbel_otu)
+# let's check out a subset
+wirbel_otu[1:5, 1:3]
 ```
 
-Use `dim()` to check out the size of this dataset. Often `head()` produces too much output for a count table, so instead subset `wirbel_otu` to the first five samples and the first five columns to get a sense of what it looks like. 
-
-```{r}
-
-```
-
-Based on the dimensions of the metadata and mOTU data, how are these data tables related? 
-
-Let's save these mOTU names in a vector.
+We can see that this table has $566$ samples (just like the metadata) and $845$ mOTUs. Let's save these mOTU names in a vector.
 
 ```{r}
 mOTU_names <- colnames(wirbel_otu)
@@ -165,28 +158,13 @@ Let's interpret this parameter! Here `radEmu` is estimating that the log fold di
 
 By default `radEmu` estimates this type of parameter, in which we compare the log fold difference in one mOTU to the *typical* (approximately the median) log fold difference in all mOTUs. However, `radEmu` is flexible and will let you define other types of parameters. We can instead compare all log fold differences to the log fold difference for a specific mOTU. 
 
-What reference mOTU should we use? That's up to you. If there is a specific mOTU that you're interested in comparing to, you can use that one. Or you could choose 
-
-- the mOTU that has the highest abundance across all samples
-- the mOTU that is present in the highest number of samples
-- the mOTU that has the lowest variance in raw counts across all samples
-- etc. 
-
-We'll give you an example below, but feel free to replace this with a mOTU that you choose (and flag down the TAs if you need help with the code to find the mOTU that you care about)! 
-
-```{r}
-
-```
-
-We'll find the mOTU that is present in the highest proportion of samples from the Chinese cohort, and use this as a reference mOTU.
+Let's find the mOTU that is present in the highest proportion of samples from the Chinese cohort, and use this as a reference mOTU.
 
 ```{r}
 num_present <- colSums(small_Y > 0)
 ref_num <- which.max(num_present)
 ref_num
 ```
-
-Now we will refit `radEmu` with the new parameter that we are estimating.
 
 ```{r}
 ch_fit_ref <- emuFit(formula = ~ Group,
@@ -203,9 +181,7 @@ ch_fit_ref <- emuFit(formula = ~ Group,
 ch_fit_ref$coef[1, ]
 ```
 
-How we will interpret our parameter now? Fill in the following:
-
-Here `radEmu` is estimating that the log fold difference in *Fusobacterium nucleatum s. vincentii [ref_mOTU_v2_0754]* associated with cases of CRC (as opposed to controls) minus _______________________________ is $1.867$. 
+Now we will interpret our parameter slightly differently. Here `radEmu` is estimating that the log fold difference in *Fusobacterium nucleatum s. vincentii [ref_mOTU_v2_0754]* associated with cases of CRC (as opposed to controls) minus the log fold difference in *Faecalibacterium prausnitzii [ref_mOTU_v2_4875]* associated with cases is $1.867$. 
 
 We can compare the estimates from these two runs of `radEmu`.
 
@@ -219,8 +195,7 @@ data.frame(typical_est = ch_fit$coef$estimate,
        y = "Estimate compared to reference mOTU")
 ```
 
-The $x = y$ line is shown in red. What do you notice about the relationship between the estimates from the first run of `radEmu` and the estimates from the second run of `radEmu`?
-
+The $x = y$ line is shown in red. Here we can see that changing the constraint in `radEmu` shifts all of the estimates up or down but does not change their order in terms of estimated log fold differences. 
 Let's switch back to the model that we fit first, in which we compare each log fold difference to the typical log fold difference across all mOTUs, and look closer at our results. 
 
 ```{r}
@@ -235,7 +210,7 @@ ch_df <- ch_fit$coef %>%
   mutate(cat_small = factor(cat_small, levels = cat_small[order(Genus)]))
   # reorder mOTU categories by genus
 
-radEmu_plot <- ggplot(ch_df) +
+ggplot(ch_df) +
   geom_point(aes(x = cat_small, y = estimate,color = Genus), size = .5) +
   geom_errorbar(aes(x = cat_small, ymin = lower, ymax = upper, color = Genus), width = .25) +
   theme_bw() +
@@ -243,7 +218,6 @@ radEmu_plot <- ggplot(ch_df) +
   labs(x = "Category",
        y = "Estimate") +
   coord_cartesian(ylim = c(-5, 10))
-radEmu_plot
 ```
 
 Interestingly, we estimate a mOTU *unknown Eubacterium [meta_mOTU_v2_7116]* assigned to Eubacteria to have a much higher ratio of abundance (comparing CRC group to control) than is typical across the Eubacteria mOTUs we included in this analysis.
@@ -307,31 +281,6 @@ data.frame(counts = wirbel_otu[ch_study_obs,
 
 This also makes sense given what we found --  *F. nucleatum* shows up in a sizeable minority of CRC cases, whereas Wirbel et al detect it in only one control participant.
 
-Now it's your turn. Let's look back at the plot of `radEmu` estimates and confidence intervals. Choose one mOTU from that plot and run a robust score test to find a p-value for it. 
-
-```{r, eval = FALSE}
-radEmu_plot
-
-taxa_to_test <- which(colnames(small_Y) %in%
-                        c("your mOTU here"))
-covariate_to_test <- which("GroupCRC" == ch_fit$B %>% rownames)
-your_robust_score_tests <- emuFit(formula = ~ Group,
-                                  data = wirbel_sample[ch_study_obs, ],
-                                  B = ch_fit,
-                                  test_kj = data.frame(k = covariate_to_test,
-                                                      j = taxa_to_test),
-                                  Y = small_Y)
-
-data.frame(counts = wirbel_otu[ch_study_obs,
-                               "your mOTU here"],
-           group = wirbel_sample$Group[ch_study_obs]) %>%
-  mutate(mOTU_present = counts > 0) %>%
-  group_by(group, mOTU_present) %>%
-  summarise(count = n())
-```
-
-What did you learn about the mOTU that you chose? Does the p-value align with what you expected from the estimate and confidence interval? 
-
 We could run robust score tests for every taxon in this analysis, but it will take ~3 minutes to run. Therefore we do not evaluate it here (note the argument in the code chunk `eval = FALSE`.
 
 ```{r, eval = FALSE}
@@ -371,13 +320,12 @@ bigger_Y <- bigger_Y[, -categories_to_rm]
 dim(bigger_Y)
 ```
 
-We are left with $758$ mOTUs. Again, we will run robust score tests for our two mOTUs of interest, and you can add in the mOTU that you investigated earlier. 
+We are left with $758$ mOTUs. Again, we will run robust score tests for our two mOTUs of interest
 
-```{r, eval = FALSE}
+```{r}
 taxa_to_test <- which(colnames(bigger_Y) %in%
                         c("unknown Eubacterium [meta_mOTU_v2_7116]",
-                          "Fusobacterium nucleatum s. nucleatum [ref_mOTU_v2_0777]",
-                          "add your mOTU here"))
+                          "Fusobacterium nucleatum s. nucleatum [ref_mOTU_v2_0777]"))
 ```
 
 `fastEmu` has pretty similar sytax to radEmu, except that we will also specify a small set of mOTUs as the comparison set (this changes the interpretation of our parameter, it is now the log fold difference of the mOTU of interest relative to the typical log fold difference in the comparison set. Here we choose the set of mOTUs in our previous model as the comparison set.)
@@ -534,7 +482,7 @@ data.frame(radEmu_est, aldex_est, ancom_est, deseq_est) %>%
   cor(use = "complete.obs")
 ```
 
-What do you note about the relationship between estimates? 
+Here we can see relatively strong agreement between these four  methods. `radEmu` estimates are most similar to those from `DESeq2`
 
 Next, we can compare the p-values. 
 
@@ -545,7 +493,7 @@ pval_df %>% dplyr::select(contains("pval")) %>%
   cor(use = "complete.obs")
 ```
 
-What do you note about the relationship between p-values? Does this surprise you? Why or why not?
+We see much lower correlation between p-values. This makes sense, because each method has different testing procedures.
 
 Finally, we can compute q-values (to control the false discovery rate across the $46$ tests we ran) and see which mOTUs each method finds to be significant. We'll use the `qvalue` package for this. 
 
