@@ -37,7 +37,7 @@ meta <- read_csv("https://raw.githubusercontent.com/statdivlab/stamps2024/main/s
 We can take a look at the beginning of each dataset with the function head
 
 ```{r}
-head(dpcr)
+head(ddpcr) #Correction here for the 
 head(meta)
 ```
 
@@ -67,7 +67,7 @@ The last line guarantees `Subject ID` (which is originally a string variable ord
 
 ```{r}
 both <- both %>%
-  mutate(`Subject ID` = _____(______(`Subject_ID`))) 
+  mutate(`Subject ID` = factor(as.numeric(`Subject ID`))) # Completed and corrected name of variable
 ```
 
 You can run each of these lines individually to further explore what each command is doing. 
@@ -110,8 +110,8 @@ We like to add informative labels with the `labs` layer to improve on our variab
 ```{r}
 ggplot(data = both, aes(x = `Sample Type`, y = ddpcr, col = `Subject ID`)) +
   geom_jitter(height = 0, width = 0.3) + 
-  labs(y = ,
-       title = )
+  labs(y = "Average observed ddPCR\n(copies/ul)",
+       title = "Digital PCR by Treatment") #Added the labels here
 ```
 
 
@@ -122,8 +122,8 @@ The ddpcr data is skewed, with a few larger outliers taking up a lot of space on
 ```{r}
 ggplot(data = both, aes(x = `Sample Type`, y = ddpcr, col = `Subject ID`)) +
   geom_jitter(height = 0, width = 0.3) + 
-  labs(y = "",
-       title = "") + 
+  labs(y = "Average observed ddPCR\n(copies/ul)",
+       title = "Digital PCR by Treatment") + 
   scale_y_log10()
 ```
 
@@ -131,7 +131,7 @@ What do we learn from this plot?
 It seems that there are sputum samples generally have higher concentration (ddPCR) values than saliva samples.
 
 ```{r}
-ggplot(data = both, aes(x = `Treatment Group`, y = ddpcr, col = `Subject ID`)) 
+ggplot(data = both, aes(x = `Treatment Group`, y = ddpcr, col = `Subject ID`))  + #Added the missing + sign
   geom_jitter(height = 0, width = 0.3) +
   labs(y = "Average observed ddPCR\n(copies/ul)",
        title = "Digital PCR by Treatment") + 
@@ -197,7 +197,7 @@ We have a p-value of 0.01355. If we use a alpha level of 0.05, we reject the nul
 Now, let's fit a model with multiple covariates. Let's consider `Treatment Group` and `Sample Type`. Write the proper model below, using `+` to connect covariates
 
 ```{r}
-mod_treat_type <- lm(ddpcr ~ , data = both)
+mod_treat_type <- lm(ddpcr ~ `Sample Type` + `Treatment Group`, data = both) #Completed formula
 summary(mod_treat_type)
 ```
 
@@ -209,7 +209,7 @@ What if we think there is an interaction between the effects of Treatment and Sa
 We can fit an interaction model by replacing the `+` above with `*`.
 
 ```{r}
-mod_interact <- lm(both, ddpcr ~ Sample Type * Treatment Group)
+mod_interact <- lm(ddpcr ~ `Sample Type` * `Treatment Group`, both) # Corrected typos and orders of arguments
 summary(mod_interact)
 ```
 
