@@ -48,18 +48,20 @@ Use the appropriate phyloseq functions to learn how many samples and variables w
 (Hint: Refer to phyloseq tutorial to find these functions!)
 
 ```{r}
-
+nsamples(GlobalPatterns)
+sample_variables(GlobalPatterns)
+length(sample_variables(GlobalPatterns))
 ```
 
 How many samples and covariates are there in our data?
-
+26 samples and 7 covariateas
 
 Now, we're particularly interested in looking at only the water samples so we are going to need to subset our samples using the variable SampleType. Fill in the appropriate phyloseq function below to subset our data in
 this way.
 
 ```{r}
 water <- GlobalPatterns %>%
-  _________(SampleType %in% c("Freshwater",
+  subset_samples(SampleType %in% c("Freshwater",
                                    "Freshwater (creek)",
                                    "Ocean",
                                    "Sediment (estuary)"))
@@ -70,7 +72,7 @@ We need to decide at which taxonomic level we're interested in understanding div
 Let's say we're interested in understanding the diversity in our water samples at the Order level. Fill in the blank to use the appropriate function in `phyloseq` to summarize our data at the Order level.
 
 ```{r}
-water_order <- water %>% __________("Order")
+water_order <- water %>% tax_glom("Order")
 ```
 
 ## Richness estimation
@@ -91,12 +93,12 @@ Sequencing_depth!
 What might we expect to see if we plotted observed richness of each `SampleType` by their sequencing depth?
 
 We can use `ggplot` and `phyloseq` to plot our sample types by observed richness and sequencing depth.
-Fill in the appropriate blanks for the plot aesthetics below to plot how observed richness differs across the depth of samples that are colored by sample type.
+
 ```{r}
 data.frame("observed_richness" = (observed_phyloseq %>% summary)$estimate,
            "depth" = phyloseq::sample_sums(water_order), # Easter egg! Phyloseq's function to get depth
-           "type" = water_order %>% sample_data %>% subset_samples("SampleType")) %>%
-  ggplot(aes(x = __________, y = _____________, color = _______________)) +
+           "type" = water_order %>% sample_data %>% get_variable("SampleType")) %>%
+  ggplot(aes(x = depth, y = observed_richness, color = type)) +
   geom_point() + 
   labs(x = "depth", y = "observed richness", color = "sample type")
 ```
@@ -129,11 +131,8 @@ ba$TRRsed1$model
 
 Kemp models work by fitting a probabilistic model to a transformation of the data. We can also plot the transformation and the fit if you wanted to have a look. More details about this can be found in the paper: Willis & Bunge (2015), Biometrics)
 
-Fill in the blanks below appropriates so we can first store a phyloseq object for just the 
-TRRsed1 sample.
-
 ```{r}
-tr <- water_order %>% subset_samples(X.SampleID == ______________)
+tr <- water_order %>% subset_samples(X.SampleID == "TRRsed1")
 # make a frequency count table of our data
 fc <- tr %>% otu_table %>% make_frequency_count_table
 # note: So there are 11 singletons (Orders observed once) here
