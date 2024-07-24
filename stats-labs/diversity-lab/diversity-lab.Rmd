@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 ```
 
 We're going to learn about using `breakaway` and `DivNet` for diversity estimation and comparison! Let's begin by loading in all the packages we'll need for this tutorial.
@@ -45,9 +45,10 @@ GlobalPatterns
 Here we see that `GlobalPatterns` is a `phyloseq` object containing an otu table, taxonomy table, sample data, and a phylogenetic tree.
 
 Use the appropriate phyloseq functions to learn how many samples and variables we have in our data.
-(Hint: Refer to phyloseq tutorial to find these functions!)
+(Hint: Some functions from R tutorials to try: `nsamples()`, `head()`, `subset_taxa()`, `subset_samples()`,
+`sample_variables()`, `get_variable()`.)
 
-```{r}
+```{r, eval=FALSE}
 
 ```
 
@@ -57,7 +58,7 @@ How many samples and covariates are there in our data?
 Now, we're particularly interested in looking at only the water samples so we are going to need to subset our samples using the variable SampleType. Fill in the appropriate phyloseq function below to subset our data in
 this way.
 
-```{r}
+```{r, eval=FALSE}
 water <- GlobalPatterns %>%
   _________(SampleType %in% c("Freshwater",
                                    "Freshwater (creek)",
@@ -69,7 +70,7 @@ We need to decide at which taxonomic level we're interested in understanding div
 
 Let's say we're interested in understanding the diversity in our water samples at the Order level. Fill in the blank to use the appropriate function in `phyloseq` to summarize our data at the Order level.
 
-```{r}
+```{r, eval=FALSE}
 water_order <- water %>% __________("Order")
 ```
 
@@ -79,7 +80,7 @@ A common goal in microbiome research is to look at the observed richness of our 
 
 Let's take a look at a plot of our observed Order level richness by `SampleType` using a built-in `plot` function from `breakaway`.
 
-```{r}
+```{r, eval=FALSE}
 observed_phyloseq <- sample_richness(water_order)
 plot(observed_phyloseq, water_order, color = "SampleType")
 ```
@@ -92,7 +93,9 @@ What might we expect to see if we plotted observed richness of each `SampleType`
 
 We can use `ggplot` and `phyloseq` to plot our sample types by observed richness and sequencing depth.
 Fill in the appropriate blanks for the plot aesthetics below to plot how observed richness differs across the depth of samples that are colored by sample type.
-```{r}
+(Hint: If we want to see how observed richness changes as sequencing depth changes, think about how we could set the axes based on the plot we made previously plotting how richness changes across samples!)
+
+```{r, eval=FALSE}
 data.frame("observed_richness" = (observed_phyloseq %>% summary)$estimate,
            "depth" = phyloseq::sample_sums(water_order), # Easter egg! Phyloseq's function to get depth
            "type" = water_order %>% sample_data %>% subset_samples("SampleType")) %>%
@@ -109,7 +112,7 @@ Instead of randomly subsampling our data so that our samples have some uniform l
 
 We can do that using `breakaway()`.
 
-```{r}
+```{r, eval=FALSE}
 ba <- breakaway(water_order)
 ba
 p1 <- plot(ba, water_order, color = "SampleType")
@@ -132,7 +135,7 @@ Kemp models work by fitting a probabilistic model to a transformation of the dat
 Fill in the blanks below appropriates so we can first store a phyloseq object for just the 
 TRRsed1 sample.
 
-```{r}
+```{r, eval = FALSE}
 tr <- water_order %>% subset_samples(X.SampleID == ______________)
 # make a frequency count table of our data
 fc <- tr %>% otu_table %>% make_frequency_count_table
