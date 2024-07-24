@@ -172,12 +172,7 @@ ch_fit_ref <- emuFit(formula = ~ Group,
                      Y = small_Y,
                      run_score_tests = FALSE,
                      # set our "constraint" i.e. choose our reference mOTU
-                     constraint_fn = function(x) {x[ref_num]},
-                     constraint_grad_fn = function(x) {
-                       grad <- rep(0, length(x))
-                       grad[ref_num] <- 1
-                       return(grad) },
-                     constraint_param = NA)
+                     constraint_fn = ref_num)
 ch_fit_ref$coef[1, ]
 ```
 
@@ -346,7 +341,7 @@ fastEmu_res <- fastEmuTest(formula = ~ Group,
                            constraint_tol = 1e-3)
 ```
 
-Now we have estimates for all $758$ mOTUs, and robust score test results for the same mOTUs as earlier. The difference is that `radEmu` would take much longer to run these robust score tests in the presence of $758$ mOTUS.
+Now we have estimates for all $758$ mOTUs, and robust score test results for the same mOTUs as earlier. One difference between `fastEmu` and `radEmu` is that `radEmu` would take much longer to run these robust score tests in the presence of $758$ mOTUS, but keep in mind that the interpretation of the estimated parameters changes (specific subset of reference taxa vs median-reference).
 
 ```{r}
 fastEmu_res$coef[taxa_to_test, c("covariate", "category", "estimate", "pval")]
@@ -354,7 +349,7 @@ fastEmu_res$coef[taxa_to_test, c("covariate", "category", "estimate", "pval")]
 
 The results from these two score tests are nearly identical to the `radEmu` model.
 
-We recommend using `fastEmu` over `radEmu` when running differential abundance analyses for very large datasets. It was motivated by the problem of estimating and testing log fold differences in abundance in genes from shotgun data. 
+We recommend using `fastEmu` over `radEmu` when running differential abundance analyses for very large datasets. That said, you do need to choose a reference set to use `fastEmu`. This is either a set of taxa that you believe to be unchanging in abundance (in which case you can estimate fold-changes! i.e., not fold-changes-relative-to-something-else), or just a set of taxa whose fold-changes you'd like to compare other fold-changes to. In the case of analysing gene abundances (here we're using taxonomic abundances), we recommend the ribosomal genes as a reference set. 
 
 ## Fitting other models
 
@@ -397,7 +392,7 @@ aldex_pvals <- aldex_res$`covariate_boolean:pval`
 
 ### ANCOM-BC2
 
-`ANCOM-BC2` is a differential abundance method built specifically for microbiome data, which accounts for sample-specific and taxon-specific detection effects in HTS data. 
+`ANCOM-BC2` is a differential abundance method built specifically for microbiome data. 
 
 ```{r, include=FALSE}
 if (!("ANCOMBC" %in% row.names(installed.packages()))) {
@@ -436,11 +431,11 @@ ancom_pvals <- ancom_res$res$p_GroupCRC
 ancom_est
 ```
 
-When we look at `ancom_est` we can see six estimates are recorded as `NA`. This is because `ANCOM-BC2` cannot compute estimates and p-values for mOTUs that show separation, i.e. they only have non-zero counts in one of the covariate levels. This is one disadvantage of `ANCOM-BC2`. 
+When we look at `ancom_est` we can see six estimates are recorded as `NA`. This is because `ANCOM-BC2` cannot compute estimates (nor perform inferences) for mOTUs that have all-zero counts in one of the covariate levels. This is one disadvantage of `ANCOM-BC2` not shared by `radEmu`. 
 
 ### DESeq2
 
-`DESeq2` is another method that was built for RNA-seq data, but is commonly used for microbiome differential abundance analyses.  
+`DESeq2` is another method that was built for RNA-seq data, but is commonly used for microbiome differential abundance analyses. Note that even the developer of DESeq2, Mike Love, recommends **against** DESeq2 for microbiome data because the assumptions aren't satistfied, and has previously endorsed StatDivLab tools for microbiome data. Thanks, Mike!! <3 
 
 ```{r, include=FALSE}
 if (!("DESeq2" %in% row.names(installed.packages()))) {
@@ -451,7 +446,7 @@ library(DESeq2)
 citation("DESeq2")
 ```
 
-`DESeq2` cannot run with default settings if all mOTUs have at least one zero. Let's check on this condition in our data. 
+`DESeq2` cannot run with default settings unless there's at least one taxon observed in every sample. Let's check on this condition in our data.  
 
 ```{r}
 mOTUs_no_zero <- colSums(small_Y == 0) == 0
@@ -518,23 +513,39 @@ qval_df <- pval_df %>%
   pivot_longer(cols = 2:5, names_to = "method", values_to = "qval") 
 qval_df %>%
   group_by(method) %>%
-  summarise(sum(qval <= 0.10))
+  summarise(min(qval))
+qval_df %>%
+  group_by(method) %>%
+  summarise(sum(qval < 0.1))
 ```
 
-Here we can see that there are no mOTUs that are significant using qvalues and a false discovery rate of 0.10 using `radEmu` and `ALDEx2`, and there are $16$ and $25$ mOTUs that are significant using `ANCOM-BC2` and `DESeq2` respectively. This demonstrates a trade-off between these methods, `radEmu` and `ALDEx2` better control Type I error but often have lower power, while `ANCOM-BC2` and `DESeq2` fail to control Type I error in some settings but often have higher power. 
+Here we can see that the minimum q-value from `radEmu` is $0.12$, the minimum q-value from `ALDEx2` is $0.28$, the minimum q-value from `ANCOM-BC2` is $3.47e-9$ and the minimum q-value from `DESeq2` is $7.24e-11$. This means that `ANCOM-BC2` and `DESeq2` find much stronger evidence for differential abundance for some mOTUs in our data (i.e. if we control the false discovery rate at $10\%$ we can make several discoveries), and `radEmu` and `ALDEx2` find weaker evidence (i.e. if we control the false discovery rate at $10\%$ we cannot make discoveries). 
 
-Finally, we will check how many of the significant mOTUs that were found by `ANCOM-BC2` and `DESeq2` are the same. 
+That said, `ANCOM-BC2` and `DESeq2` fail to control Type I error (see the slides), which is why the StatDivLab would hesitate to claim "significant! FDR<0.1!" here. `radEmu` and `ALDEx2` do control Type I error, and don't find anything significant at the 10% FDR level here... there's just not enough strength of evidence at this stringency threshold...  
+
+Finally, we will compare the overlap between the mOTUs with the lowest q-values from `radEmu` and `ALDEx2`. 
 
 ```{r}
-qval_df %>%
-  filter(qval <= 0.10) %>%
-  group_by(mOTU) %>%
-  summarise(num_small_q = n()) %>%
-  group_by(num_small_q) %>%
-  summarise(n())
+min_radEmu_q <- qval_df %>% filter(method == "radEmu_q") %>% arrange(qval) %>% pull(qval) %>% head(1)
+min_aldex_q <- qval_df %>% filter(method == "aldex_q") %>% arrange(qval) %>% pull(qval) %>% head(1)
+smallest_qval_df <- qval_df %>%
+  pivot_wider(names_from = method, values_from = qval) %>%
+  mutate(small_radEmu_q = ifelse(radEmu_q == min_radEmu_q, TRUE, FALSE),
+         small_aldex_q = ifelse(aldex_q == min_aldex_q, TRUE, FALSE)) %>%
+  filter(small_radEmu_q | small_aldex_q)
+sum(smallest_qval_df$small_radEmu_q == TRUE)
+# there are 6 mOTUs with the same smallest radEmu q value
+sum(smallest_qval_df$small_aldex_q == TRUE)
+# there are 9 mOTUs with the same smallest ALDEx2 q value
+sum(smallest_qval_df$small_radEmu_q & smallest_qval_df$small_aldex_q)
+# 3 of these mOTUs are the same 
+smallest_qval_df %>%
+  filter(small_radEmu_q & small_aldex_q) %>%
+  pull(mOTU)
+# these are those three mOTUs
 ```
 
-Here we can see that there are $23$ mOTUs that are only identified by one method and $9$ mOTUs that are identified by both methods. 
+Here we can identify three mOTUs that `radEmu` and `ALDEx2` agree are among the most significant in terms of q-values in the dataset. 
 
 ## Conclusions 
 
