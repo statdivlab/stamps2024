@@ -98,7 +98,7 @@ Fill in the appropriate blanks for the plot aesthetics below to plot how observe
 ```{r, eval=FALSE}
 data.frame("observed_richness" = (observed_phyloseq %>% summary)$estimate,
            "depth" = phyloseq::sample_sums(water_order), # Easter egg! Phyloseq's function to get depth
-           "type" = water_order %>% sample_data %>% subset_samples("SampleType")) %>%
+           "type" = water_order %>% sample_data %>% get_variable("SampleType")) %>%
   ggplot(aes(x = __________, y = _____________, color = _______________)) +
   geom_point() + 
   labs(x = "depth", y = "observed richness", color = "sample type")
