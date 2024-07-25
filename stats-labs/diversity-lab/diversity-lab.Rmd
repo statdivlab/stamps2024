@@ -242,6 +242,7 @@ Now we see that organisms in the same group are estimated to have the same diver
 
 You can analyze sex, time, disease status in this way. It's actually ideal for longitudinal/epidemiology studies, because you can say something about the groups, not just the people/mice in your study.
 
+
 Let's look at hypothesis testing for `DivNet`.
 
 ```{r}
