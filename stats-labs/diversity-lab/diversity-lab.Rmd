@@ -182,11 +182,11 @@ Please use it! It's very important that you account for the error bars in divers
 
 ## Other diversity metric estimation
 
-Species richness counts all species equally. However, if a species is rare, you may think that it doesn't play a role in the community. Another alpha diversity index, called the Shannon index, works similarly to species richness but it downweights the importance of rare taxa i.e. if a taxon is present but in low abundance, it doesn't count for "1" taxon, but something less (to reflect its low abundance). Since rare taxa may be dubious, the Shannon index is very popular in microbial ecology.
+Species richness counts all species equally. However, if a species is rare, you may think that it doesn't play much of a role in the community. Another alpha diversity index, called the Shannon index, works similarly to species richness but it downweights the importance of rare taxa i.e. if a taxon is present but in low abundance, it doesn't count for "1" taxon, but something less (to reflect its low abundance). Since rare taxa may be dubious, the Shannon index is very popular in microbial ecology.
 
-For the reasons discussed in the statistics lecture, it's important to estimate the Shannon diversity using a valid estimator of the Shannon diversity. It's even more important to come up with the standard error, and use that standard error in testing using `betta()`.
+For the reasons discussed in the statistics lecture, Shannon diversity is hard to estimate, and all existing approaches have big limitations. While we don't have perfect solutions, we have some ideas for how to do better than plug-in estimators. Our approach is to use a better estimator, estimate the uncertainty in estimation, and use that uncertainty when testing using `betta()`.
 
-Shockingly, until quite recently, there were no tools to estimate Shannon diversity in the presence of an ecological/microbial network! `DivNet` is a tool that allows you to estimate this. It also adjusts for different sequencing depths so you don't have to throw away any data (you still don't need to rarefy)!
+We developed a tool to estimate Shannon diversity in the presence of an ecological/microbial network... cute, hey? `DivNet` is that tool. It also adjusts for different sequencing depths so you don't have to throw away any data (you still don't need to rarefy)!
 
 The citation for `DivNet` is Willis & Martin (2022), Biostatistics
 
@@ -196,7 +196,7 @@ The citation for `DivNet` is Willis & Martin (2022), Biostatistics
 dv_water_order <- divnet(water_order, ncores = 4)
 ```
 
-`DivNet` outputs a list of the estimates of shannon and simpson alpha diversities, and bray-curtis and euclidean beta diversities. 
+`DivNet` outputs a list of the estimates of Shannon and Simpson alpha diversities, and Bray-Curtis and Euclidean beta diversities. 
 
 ```{r}
 dv_water_order %>% names
@@ -238,9 +238,9 @@ plot(dv_water_st$shannon,
      col = "SampleType")
 ```
 
-Now we see that organisms in the same group are estimated to have the same diversity. We are now estimating the diversity of this **type** of ecosystem. We're focusing on the ecosystem, not just the samples. If we want to reproduce the results of our study, it's better to focus on the populations that the samples come from, not the samples themselves
+Now we see that organisms in the same group are estimated to have the same diversity. We are now estimating the diversity of this **type** of ecosystem. We're focusing on the ecosystem, not just the samples. If we want to reproduce the results of our study, it's better to focus on the types of environments that the samples come from, not the samples themselves.
 
-You can analyze sex, time, disease status in this way. It's actually ideal for longitudinal/epigenetic studies, because you can say something about the groups, not just the people/mice in your study
+You can analyze sex, time, disease status in this way. It's actually ideal for longitudinal/epidemiology studies, because you can say something about the groups, not just the people/mice in your study.
 
 Let's look at hypothesis testing for `DivNet`.
 
